@@ -9,13 +9,15 @@
     "backend"
   ],
   "scripts": {
-    "dev": "npm run dev --workspaces",
-    "build": "npm run build --workspaces",
-    "start": "npm run start --workspaces",
+    "dev:frontend": "npm run dev --workspace=frontend",
+    "dev:backend": "npm run dev --workspace=backend",
+    "build:frontend": "npm run build --workspace=frontend",
+    "build:backend": "npm run build --workspace=backend",
+    "start:frontend": "npm run preview --workspace=frontend",
+    "start:backend": "npm run start --workspace=backend",
     "lint": "biome lint .",
     "format": "biome format --write .",
-    "check": "biome check .",
-    "install-all": "npm install"
+    "check": "biome check ."
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
