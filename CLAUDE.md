@@ -4,10 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a form generator application built as a monorepo with:
-- **Frontend**: React + Vite + TypeScript + Tailwind CSS
-- **Backend**: Hono + TypeScript + Prisma + SQLite
+This is a Google Forms-like form generator application built as a monorepo with:
+- **Frontend**: React + Vite + TypeScript + Tailwind CSS + React Hook Form + Jotai
+- **Backend**: Hono + TypeScript + Prisma + SQLite (with Hono RPC)
 - **Tooling**: Biome for linting/formatting, npm workspaces for monorepo management
+
+### Product Concept
+A hobby project for creating and collecting form responses without login functionality. Anyone can create forms and collect responses. Simple design with optional password protection for forms.
 
 ## Development Commands
 
@@ -97,3 +100,109 @@ npx prisma studio --schema=backend/prisma/schema.prisma
 - Database uses SQLite for simplicity in development
 - Biome replaces ESLint/Prettier for consistent code formatting
 - All builds must pass TypeScript compilation before deployment
+
+## Product Specifications
+
+### Main Features
+
+#### 1. Form Creation
+- Set title and description
+- Add/remove/reorder form elements:
+  - Text input (`input`)
+  - Text area (`textarea`)  
+  - Radio buttons (`radio`)
+  - Select box (`select`)
+  - Checkboxes (`checkbox`)
+  - Date picker (`date`)
+  - Number input (`number`)
+- Validation settings for each element:
+  - Required/optional setting
+  - Character limits (min/max)
+  - Number ranges (min/max)
+  - Regular expression patterns (email, URL, etc.)
+- Optional password protection setting
+
+#### 2. Response Collection
+- Fill out created forms
+- Real-time error display based on validation
+- Optional confirmation screen before submission
+- Display completion message after submission
+
+#### 3. Password Protection
+- Simple implementation: no session management, re-enter on reload
+- Optional password setting during form creation
+- Password-protected forms only display after correct password entry
+- Passwords are hashed and stored on backend
+
+#### 4. Response Management
+- Form creators can view all responses
+- Individual response detail view
+
+### Routing Structure
+```
+/                          # Home (start form creation)
+/forms/create              # Form creation page  
+/forms/:formId             # Response page (password protection supported)
+/forms/:formId/responses   # Response list page
+/forms/:formId/responses/:responseId  # Individual response detail page
+```
+
+### Database Schema
+
+```prisma
+model Form {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  schema      Json     // Form structure
+  settings    Json     // Form settings
+  password    String?  // Hashed password
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  responses   Response[]
+  
+  @@index([createdAt])
+}
+
+model Response {
+  id          String   @id @default(uuid())
+  formId      String
+  data        Json     // Response data
+  metadata    Json?    // Metadata (optional)
+  createdAt   DateTime @default(now())
+  
+  form        Form     @relation(fields: [formId], references: [id], onDelete: Cascade)
+  
+  @@index([formId, createdAt])
+}
+```
+
+### API Design (Hono RPC)
+
+```typescript
+// Form operations
+POST   /api/forms/create      // Create form
+GET    /api/forms/:id         // Get form
+POST   /api/forms/:id/verify  // Password verification (returns form data if password matches)
+
+// Response operations  
+POST   /api/responses/create        // Submit response
+GET    /api/responses/form/:formId  // Get all responses for form
+GET    /api/responses/:id           // Get individual response
+```
+
+### Security Requirements
+- Simple rate limiting (prevent mass requests from same IP)
+- Input value sanitization
+- CORS configuration
+
+### Non-Functional Requirements
+- Responsive design support
+- Error handling with user-friendly error messages
+- Loading state displays
+
+### Future Extensibility Considerations
+- Repository pattern for data access layer abstraction
+- JSON format data storage considering future NoSQL migration
