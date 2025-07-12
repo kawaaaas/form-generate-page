@@ -24,10 +24,7 @@
       "@frontend/*": ["./frontend/src/*"]
     }
   },
-  "include": [
-    "frontend/src/**/*",
-    "backend/src/**/*"
-  ],
+  "include": ["frontend/src/**/*", "backend/src/**/*"],
   "exclude": [
     "node_modules",
     "**/node_modules",

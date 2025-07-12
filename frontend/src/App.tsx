@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 function App() {
   const [backendStatus, setBackendStatus] = useState<string>('connecting...')

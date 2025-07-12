@@ -29,6 +29,7 @@
     }
   },
   "files": {
-    "includes": ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "**/*.json"]
+    "ignoreUnknown": false,
+    "ignore": ["**/dist/**", "**/node_modules/**"]
   }
 }
