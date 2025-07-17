@@ -1,10 +1,10 @@
-import { Form } from '../../domain/entities/Form'
-import type { FormRepository } from '../../domain/repositories/FormRepository'
-import { FormId } from '../../domain/value-objects/FormId'
-import { FormSchema } from '../../domain/value-objects/FormSchema'
-import { Password } from '../../domain/value-objects/Password'
-import type { FormSettings } from '../../shared/types/api.types'
-import { prisma } from '../database/PrismaClient'
+import { Form } from '../../domain/entities/Form';
+import type { FormRepository } from '../../domain/repositories/FormRepository';
+import { FormId } from '../../domain/value-objects/FormId';
+import { FormSchema } from '../../domain/value-objects/FormSchema';
+import { Password } from '../../domain/value-objects/Password';
+import type { FormSettings } from '../../shared/types/api.types';
+import { prisma } from '../database/PrismaClient';
 
 export class PrismaFormRepository implements FormRepository {
   async save(form: Form): Promise<void> {
@@ -18,9 +18,9 @@ export class PrismaFormRepository implements FormRepository {
       isActive: form.isActive,
       createdAt: form.createdAt,
       updatedAt: form.updatedAt,
-    }
+    };
 
-    await prisma.form.create({ data })
+    await prisma.form.create({ data });
   }
 
   async findById(id: FormId): Promise<Form | null> {
@@ -37,25 +37,25 @@ export class PrismaFormRepository implements FormRepository {
         createdAt: true,
         updatedAt: true,
       },
-    })
+    });
 
     if (!formData) {
-      return null
+      return null;
     }
 
-    return this.toDomainEntity(formData, false)
+    return this.toDomainEntity(formData, false);
   }
 
   async findByIdWithPassword(id: FormId): Promise<Form | null> {
     const formData = await prisma.form.findUnique({
       where: { id: id.value },
-    })
+    });
 
     if (!formData) {
-      return null
+      return null;
     }
 
-    return this.toDomainEntity(formData, true)
+    return this.toDomainEntity(formData, true);
   }
 
   async update(form: Form): Promise<void> {
@@ -68,24 +68,24 @@ export class PrismaFormRepository implements FormRepository {
         isActive: form.isActive,
         updatedAt: form.updatedAt,
       },
-    })
+    });
   }
 
   async delete(id: FormId): Promise<void> {
     await prisma.form.delete({
       where: { id: id.value },
-    })
+    });
   }
 
   async findAll(options?: {
-    isActive?: boolean
-    limit?: number
-    offset?: number
+    isActive?: boolean;
+    limit?: number;
+    offset?: number;
   }): Promise<Form[]> {
     const where =
       options?.isActive !== undefined
         ? { isActive: options.isActive }
-        : undefined
+        : undefined;
 
     const forms = await prisma.form.findMany({
       where,
@@ -103,28 +103,28 @@ export class PrismaFormRepository implements FormRepository {
       orderBy: { createdAt: 'desc' },
       take: options?.limit,
       skip: options?.offset,
-    })
+    });
 
-    return forms.map((form) => this.toDomainEntity(form, false))
+    return forms.map((form) => this.toDomainEntity(form, false));
   }
 
   async count(options?: { isActive?: boolean }): Promise<number> {
     const where =
       options?.isActive !== undefined
         ? { isActive: options.isActive }
-        : undefined
+        : undefined;
 
-    return await prisma.form.count({ where })
+    return await prisma.form.count({ where });
   }
 
   // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   private toDomainEntity(data: any, includePassword: boolean): Form {
-    const schema = new FormSchema(JSON.parse(data.schema))
-    const settings: FormSettings = JSON.parse(data.settings)
+    const schema = new FormSchema(JSON.parse(data.schema));
+    const settings: FormSettings = JSON.parse(data.settings);
 
-    let password: Password | undefined
+    let password: Password | undefined;
     if (includePassword && data.password) {
-      password = Password.fromHash(data.password)
+      password = Password.fromHash(data.password);
     }
 
     return new Form({
@@ -137,6 +137,6 @@ export class PrismaFormRepository implements FormRepository {
       isActive: data.isActive,
       createdAt: data.createdAt,
       updatedAt: data.updatedAt,
-    })
+    });
   }
 }

@@ -9,8 +9,16 @@
     "preview": "vite preview --port 5173"
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.1.1",
+    "@types/node": "^20.19.4",
+    "hono": "^4.8.5",
+    "jotai": "^2.12.5",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "react-hook-form": "^7.60.0",
+    "react-router-dom": "^7.6.3",
+    "swr": "^2.3.4",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@types/react": "^19.1.8",

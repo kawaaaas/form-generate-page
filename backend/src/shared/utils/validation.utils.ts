@@ -1,111 +1,111 @@
-import { z } from 'zod'
-import type { FormElement, FormElementValidation } from '../types/api.types'
+import { z } from 'zod';
+import type { FormElement, FormElementValidation } from '../types/api.types';
 
 export function createDynamicValidator(
-  elements: FormElement[]
+  elements: FormElement[],
 ): z.ZodObject<Record<string, z.ZodType>> {
-  const shape: Record<string, z.ZodType> = {}
+  const shape: Record<string, z.ZodType> = {};
 
   for (const element of elements) {
-    let validator: z.ZodType
+    let validator: z.ZodType;
 
     switch (element.type) {
       case 'input':
       case 'textarea':
-        validator = z.string()
-        break
+        validator = z.string();
+        break;
       case 'number':
-        validator = z.number()
-        break
+        validator = z.number();
+        break;
       case 'date':
-        validator = z.string().date()
-        break
+        validator = z.string().date();
+        break;
       case 'radio':
       case 'select':
-        validator = z.string()
+        validator = z.string();
         if (element.options) {
-          validator = z.enum(element.options as [string, ...string[]])
+          validator = z.enum(element.options as [string, ...string[]]);
         }
-        break
+        break;
       case 'checkbox':
-        validator = z.array(z.string())
-        break
+        validator = z.array(z.string());
+        break;
       default:
-        validator = z.string()
+        validator = z.string();
     }
 
     if (element.validation) {
-      validator = applyValidationRules(validator, element.validation)
+      validator = applyValidationRules(validator, element.validation);
     }
 
     if (!element.validation?.required) {
-      validator = validator.optional()
+      validator = validator.optional();
     }
 
-    shape[element.name] = validator
+    shape[element.name] = validator;
   }
 
-  return z.object(shape)
+  return z.object(shape);
 }
 
 function applyValidationRules(
   validator: z.ZodType,
-  validation: FormElementValidation
+  validation: FormElementValidation,
 ): z.ZodType {
-  let result = validator
+  let result = validator;
 
   if (result instanceof z.ZodString) {
     if (validation.minLength !== undefined) {
-      result = result.min(validation.minLength)
+      result = result.min(validation.minLength);
     }
     if (validation.maxLength !== undefined) {
-      result = (result as z.ZodString).max(validation.maxLength)
+      result = (result as z.ZodString).max(validation.maxLength);
     }
     if (validation.pattern) {
-      result = (result as z.ZodString).regex(new RegExp(validation.pattern))
+      result = (result as z.ZodString).regex(new RegExp(validation.pattern));
     }
   }
 
   if (result instanceof z.ZodNumber) {
     if (validation.min !== undefined) {
-      result = result.min(validation.min)
+      result = result.min(validation.min);
     }
     if (validation.max !== undefined) {
-      result = (result as z.ZodNumber).max(validation.max)
+      result = (result as z.ZodNumber).max(validation.max);
     }
   }
 
-  return result
+  return result;
 }
 
 export function sanitizeInput(input: unknown): unknown {
   if (typeof input === 'string') {
-    return input.trim()
+    return input.trim();
   }
 
   if (Array.isArray(input)) {
-    return input.map(sanitizeInput)
+    return input.map(sanitizeInput);
   }
 
   if (input && typeof input === 'object') {
-    const sanitized: Record<string, unknown> = {}
+    const sanitized: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(input)) {
-      sanitized[key] = sanitizeInput(value)
+      sanitized[key] = sanitizeInput(value);
     }
-    return sanitized
+    return sanitized;
   }
 
-  return input
+  return input;
 }
 
 export function validateFormElement(
   element: FormElement,
-  value: unknown
+  value: unknown,
 ): { isValid: boolean; errors: string[] } {
-  const errors: string[] = []
+  const errors: string[] = [];
 
   if (element.validation?.required && (!value || value === '')) {
-    errors.push(`${element.label} is required`)
+    errors.push(`${element.label} is required`);
   }
 
   if (value && typeof value === 'string') {
@@ -114,8 +114,8 @@ export function validateFormElement(
       value.length < element.validation.minLength
     ) {
       errors.push(
-        `${element.label} must be at least ${element.validation.minLength} characters`
-      )
+        `${element.label} must be at least ${element.validation.minLength} characters`,
+      );
     }
 
     if (
@@ -123,8 +123,8 @@ export function validateFormElement(
       value.length > element.validation.maxLength
     ) {
       errors.push(
-        `${element.label} must be at most ${element.validation.maxLength} characters`
-      )
+        `${element.label} must be at most ${element.validation.maxLength} characters`,
+      );
     }
 
     if (
@@ -132,8 +132,9 @@ export function validateFormElement(
       !new RegExp(element.validation.pattern).test(value)
     ) {
       errors.push(
-        element.validation.customMessage || `${element.label} format is invalid`
-      )
+        element.validation.customMessage ||
+          `${element.label} format is invalid`,
+      );
     }
   }
 
@@ -142,19 +143,21 @@ export function validateFormElement(
       element.validation?.min !== undefined &&
       value < element.validation.min
     ) {
-      errors.push(`${element.label} must be at least ${element.validation.min}`)
+      errors.push(
+        `${element.label} must be at least ${element.validation.min}`,
+      );
     }
 
     if (
       element.validation?.max !== undefined &&
       value > element.validation.max
     ) {
-      errors.push(`${element.label} must be at most ${element.validation.max}`)
+      errors.push(`${element.label} must be at most ${element.validation.max}`);
     }
   }
 
   return {
     isValid: errors.length === 0,
     errors,
-  }
+  };
 }

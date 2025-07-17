@@ -1,30 +1,30 @@
-import { Form } from '../../domain/entities/Form'
-import type { FormRepository } from '../../domain/repositories/FormRepository'
-import { FormId } from '../../domain/value-objects/FormId'
-import { FormSchema } from '../../domain/value-objects/FormSchema'
-import { Password } from '../../domain/value-objects/Password'
+import { Form } from '../../domain/entities/Form';
+import type { FormRepository } from '../../domain/repositories/FormRepository';
+import { FormId } from '../../domain/value-objects/FormId';
+import { FormSchema } from '../../domain/value-objects/FormSchema';
+import { Password } from '../../domain/value-objects/Password';
 import {
   NotFoundError,
   UnauthorizedError,
   ValidationError,
-} from '../../shared/utils/error.utils'
-import type { CreateFormDto } from '../dto/CreateFormDto'
-import type { FormResponseDto } from '../dto/FormResponseDto'
+} from '../../shared/utils/error.utils';
+import type { CreateFormDto } from '../dto/CreateFormDto';
+import type { FormResponseDto } from '../dto/FormResponseDto';
 
 export class FormService {
   constructor(private readonly formRepository: FormRepository) {}
 
   async createForm(dto: CreateFormDto): Promise<FormResponseDto> {
-    const schema = new FormSchema(dto.schema)
+    const schema = new FormSchema(dto.schema);
 
-    let password: Password | undefined
+    let password: Password | undefined;
     if (dto.settings.requiresPassword) {
       if (!dto.password) {
         throw new ValidationError(
-          'Password is required when requiresPassword is true'
-        )
+          'Password is required when requiresPassword is true',
+        );
       }
-      password = await Password.fromPlainText(dto.password)
+      password = await Password.fromPlainText(dto.password);
     }
 
     const form = Form.create(
@@ -32,113 +32,113 @@ export class FormService {
       dto.description,
       schema,
       dto.settings,
-      password
-    )
+      password,
+    );
 
-    await this.formRepository.save(form)
+    await this.formRepository.save(form);
 
-    return this.toResponseDto(form)
+    return this.toResponseDto(form);
   }
 
   async getForm(id: string): Promise<FormResponseDto> {
-    const formId = new FormId(id)
-    const form = await this.formRepository.findById(formId)
+    const formId = new FormId(id);
+    const form = await this.formRepository.findById(formId);
 
     if (!form) {
-      throw new NotFoundError('Form', id)
+      throw new NotFoundError('Form', id);
     }
 
     if (!form.isActive) {
-      throw new NotFoundError('Form', id)
+      throw new NotFoundError('Form', id);
     }
 
-    return this.toResponseDto(form)
+    return this.toResponseDto(form);
   }
 
   async getFormForPasswordVerification(id: string): Promise<Form> {
-    const formId = new FormId(id)
-    const form = await this.formRepository.findByIdWithPassword(formId)
+    const formId = new FormId(id);
+    const form = await this.formRepository.findByIdWithPassword(formId);
 
     if (!form) {
-      throw new NotFoundError('Form', id)
+      throw new NotFoundError('Form', id);
     }
 
     if (!form.isActive) {
-      throw new NotFoundError('Form', id)
+      throw new NotFoundError('Form', id);
     }
 
-    return form
+    return form;
   }
 
   async verifyPassword(id: string, password: string): Promise<FormResponseDto> {
-    const form = await this.getFormForPasswordVerification(id)
+    const form = await this.getFormForPasswordVerification(id);
 
     if (!form.requiresPasswordForAccess()) {
-      return this.toResponseDto(form)
+      return this.toResponseDto(form);
     }
 
-    const isValidPassword = await form.verifyPassword(password)
+    const isValidPassword = await form.verifyPassword(password);
     if (!isValidPassword) {
-      throw new UnauthorizedError('Invalid password')
+      throw new UnauthorizedError('Invalid password');
     }
 
-    return this.toResponseDto(form)
+    return this.toResponseDto(form);
   }
 
   async updateForm(
     id: string,
-    dto: Partial<CreateFormDto>
+    dto: Partial<CreateFormDto>,
   ): Promise<FormResponseDto> {
-    const formId = new FormId(id)
-    const form = await this.formRepository.findByIdWithPassword(formId)
+    const formId = new FormId(id);
+    const form = await this.formRepository.findByIdWithPassword(formId);
 
     if (!form) {
-      throw new NotFoundError('Form', id)
+      throw new NotFoundError('Form', id);
     }
 
     if (dto.title !== undefined) {
-      form.updateTitle(dto.title)
+      form.updateTitle(dto.title);
     }
 
     if (dto.description !== undefined) {
-      form.updateDescription(dto.description)
+      form.updateDescription(dto.description);
     }
 
     if (dto.settings !== undefined) {
-      form.updateSettings(dto.settings)
+      form.updateSettings(dto.settings);
     }
 
-    await this.formRepository.update(form)
+    await this.formRepository.update(form);
 
-    return this.toResponseDto(form)
+    return this.toResponseDto(form);
   }
 
   async deactivateForm(id: string): Promise<void> {
-    const formId = new FormId(id)
-    const form = await this.formRepository.findById(formId)
+    const formId = new FormId(id);
+    const form = await this.formRepository.findById(formId);
 
     if (!form) {
-      throw new NotFoundError('Form', id)
+      throw new NotFoundError('Form', id);
     }
 
-    form.deactivate()
-    await this.formRepository.update(form)
+    form.deactivate();
+    await this.formRepository.update(form);
   }
 
   async activateForm(id: string): Promise<void> {
-    const formId = new FormId(id)
-    const form = await this.formRepository.findById(formId)
+    const formId = new FormId(id);
+    const form = await this.formRepository.findById(formId);
 
     if (!form) {
-      throw new NotFoundError('Form', id)
+      throw new NotFoundError('Form', id);
     }
 
-    form.activate()
-    await this.formRepository.update(form)
+    form.activate();
+    await this.formRepository.update(form);
   }
 
   private toResponseDto(form: Form): FormResponseDto {
-    const json = form.toJSON()
+    const json = form.toJSON();
     return {
       id: json.id,
       title: json.title,
@@ -148,6 +148,6 @@ export class FormService {
       isActive: json.isActive,
       createdAt: json.createdAt,
       updatedAt: json.updatedAt,
-    }
+    };
   }
 }
