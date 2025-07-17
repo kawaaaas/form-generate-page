@@ -1,12 +1,12 @@
-import type { FormSchema, FormSettings } from '../../shared/types/api.types'
+import type { FormSchema, FormSettings } from '../../shared/types/api.types';
 
 export interface FormResponseDto {
-  id: string
-  title: string
-  description?: string
-  schema: FormSchema
-  settings: FormSettings
-  isActive: boolean
-  createdAt: string
-  updatedAt: string
+  id: string;
+  title: string;
+  description?: string;
+  schema: FormSchema;
+  settings: FormSettings;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
 }

@@ -1,86 +1,88 @@
-import type { z } from 'zod'
+import type { z } from 'zod';
 import type {
   FormElement,
   FormSchema as FormSchemaType,
-} from '../../shared/types/api.types'
-import { ValidationError } from '../../shared/utils/error.utils'
+} from '../../shared/types/api.types';
+import { ValidationError } from '../../shared/utils/error.utils';
 import {
   createDynamicValidator,
   validateFormElement,
-} from '../../shared/utils/validation.utils'
+} from '../../shared/utils/validation.utils';
 
 export class FormSchema {
-  private readonly _elements: FormElement[]
+  private readonly _elements: FormElement[];
 
   constructor(schema: FormSchemaType) {
     if (!schema.elements || schema.elements.length === 0) {
-      throw new ValidationError('Form schema must contain at least one element')
+      throw new ValidationError(
+        'Form schema must contain at least one element',
+      );
     }
 
-    this.validateSchema(schema)
-    this._elements = schema.elements
+    this.validateSchema(schema);
+    this._elements = schema.elements;
   }
 
   get elements(): FormElement[] {
-    return [...this._elements]
+    return [...this._elements];
   }
 
   get value(): FormSchemaType {
     return {
       elements: this.elements,
-    }
+    };
   }
 
   validateResponseData(data: Record<string, unknown>): {
-    isValid: boolean
-    errors: Record<string, string[]>
+    isValid: boolean;
+    errors: Record<string, string[]>;
   } {
-    const errors: Record<string, string[]> = {}
-    let isValid = true
+    const errors: Record<string, string[]> = {};
+    let isValid = true;
 
     for (const element of this._elements) {
-      const value = data[element.name]
-      const validation = validateFormElement(element, value)
+      const value = data[element.name];
+      const validation = validateFormElement(element, value);
 
       if (!validation.isValid) {
-        errors[element.name] = validation.errors
-        isValid = false
+        errors[element.name] = validation.errors;
+        isValid = false;
       }
     }
 
-    return { isValid, errors }
+    return { isValid, errors };
   }
 
   // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   createDynamicValidator(): z.ZodObject<any> {
-    return createDynamicValidator(this._elements)
+    return createDynamicValidator(this._elements);
   }
 
   getElementById(id: string): FormElement | undefined {
-    return this._elements.find((element) => element.id === id)
+    return this._elements.find((element) => element.id === id);
   }
 
   getElementByName(name: string): FormElement | undefined {
-    return this._elements.find((element) => element.name === name)
+    return this._elements.find((element) => element.name === name);
   }
 
   private validateSchema(schema: FormSchemaType): void {
-    const elementNames = new Set<string>()
-    const elementIds = new Set<string>()
+    const elementNames = new Set<string>();
+    const elementIds = new Set<string>();
 
     for (const element of schema.elements) {
       if (elementNames.has(element.name)) {
-        throw new ValidationError(`Duplicate element name: ${element.name}`)
+        throw new ValidationError(`Duplicate element name: ${element.name}`);
       }
 
       if (elementIds.has(element.id)) {
-        throw new ValidationError(`Duplicate element id: ${element.id}`)
+        throw new ValidationError(`Duplicate element id: ${element.id}`);
       }
 
-      elementNames.add(element.name)
-      elementIds.add(element.id)
+      elementNames.add(element.name);
+      elementIds.add(element.id);
 
-      this.validateElement(element)
+      this.validateElement(element);
     }
   }
 
@@ -88,8 +90,8 @@ export class FormSchema {
     if (element.type === 'radio' || element.type === 'select') {
       if (!element.options || element.options.length === 0) {
         throw new ValidationError(
-          `Element ${element.name} of type ${element.type} must have options`
-        )
+          `Element ${element.name} of type ${element.type} must have options`,
+        );
       }
     }
 
@@ -100,8 +102,8 @@ export class FormSchema {
       ) {
         if (element.validation.minLength > element.validation.maxLength) {
           throw new ValidationError(
-            `Element ${element.name}: minLength cannot be greater than maxLength`
-          )
+            `Element ${element.name}: minLength cannot be greater than maxLength`,
+          );
         }
       }
 
@@ -111,8 +113,8 @@ export class FormSchema {
       ) {
         if (element.validation.min > element.validation.max) {
           throw new ValidationError(
-            `Element ${element.name}: min cannot be greater than max`
-          )
+            `Element ${element.name}: min cannot be greater than max`,
+          );
         }
       }
     }

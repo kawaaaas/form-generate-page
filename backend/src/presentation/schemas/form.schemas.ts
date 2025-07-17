@@ -1,5 +1,5 @@
-import { z } from 'zod'
-import { uuidSchema } from './common.schemas'
+import { z } from 'zod';
+import { uuidSchema } from './common.schemas';
 
 export const formElementTypeSchema = z.enum([
   'input',
@@ -9,7 +9,7 @@ export const formElementTypeSchema = z.enum([
   'checkbox',
   'date',
   'number',
-])
+]);
 
 export const formElementValidationSchema = z.object({
   required: z.boolean().optional(),
@@ -19,7 +19,7 @@ export const formElementValidationSchema = z.object({
   max: z.number().optional(),
   pattern: z.string().optional(),
   customMessage: z.string().optional(),
-})
+});
 
 export const formElementSchema = z.object({
   id: z.string(),
@@ -29,17 +29,17 @@ export const formElementSchema = z.object({
   placeholder: z.string().optional(),
   options: z.array(z.string()).optional(),
   validation: formElementValidationSchema.optional(),
-})
+});
 
 export const formSchemaSchema = z.object({
   elements: z.array(formElementSchema).min(1),
-})
+});
 
 export const formSettingsSchema = z.object({
   requiresPassword: z.boolean(),
   confirmationMessage: z.string().optional(),
   redirectUrl: z.string().url().optional(),
-})
+});
 
 export const createFormSchema = z.object({
   title: z.string().min(1).max(255),
@@ -47,15 +47,15 @@ export const createFormSchema = z.object({
   schema: formSchemaSchema,
   settings: formSettingsSchema,
   password: z.string().min(6).optional(),
-})
+});
 
 export const formIdParamSchema = z.object({
   id: uuidSchema,
-})
+});
 
 export const passwordVerificationSchema = z.object({
   password: z.string().min(1),
-})
+});
 
 export const formResponseSchema = z.object({
   id: uuidSchema,
@@ -66,4 +66,4 @@ export const formResponseSchema = z.object({
   isActive: z.boolean(),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
-})
+});

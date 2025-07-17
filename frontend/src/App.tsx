@@ -1,4 +1,4 @@
-import { Route, BrowserRouter as Router, Routes } from 'react-router-dom'
+import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 // import { HomePage } from './pages/HomePage'
 // import { FormCreatePage } from './pages/FormCreatePage'
 // import { NotFoundPage } from './pages/NotFoundPage'
@@ -17,7 +17,7 @@ function App() {
         <Route path="*" element={<div>not found</div>} />
       </Routes>
     </Router>
-  )
+  );
 }
 
-export default App
+export default App;
