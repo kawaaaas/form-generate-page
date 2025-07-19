@@ -26,10 +26,10 @@ import type {
   formSettingsSchema,
 } from '../../../backend/src/presentation/schemas/form.schemas';
 import type {
+  createResponseRequestSchema,
   responseItemSchema,
   responseListSchema,
   submitResponseSchema,
-  createResponseRequestSchema,
 } from '../../../backend/src/presentation/schemas/response.schemas';
 
 // Infer types from backend Zod schemas
@@ -56,4 +56,5 @@ export interface FormData {
   schema: FormSchemaType;
   settings: FormSettings;
   password?: string;
+  adminPassword: string; // Required for admin access
 }

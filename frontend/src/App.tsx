@@ -1,11 +1,11 @@
 import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import Layout from './components/Layout';
+import AdminResponseListPage from './pages/AdminResponseListPage';
 import FormCreatePage from './pages/FormCreatePage';
 import FormPage from './pages/FormPage';
 import HomePage from './pages/HomePage';
 import NotFoundPage from './pages/NotFoundPage';
 import ResponseDetailPage from './pages/ResponseDetailPage';
-import ResponseListPage from './pages/ResponseListPage';
 
 function App() {
   return (
@@ -16,12 +16,16 @@ function App() {
           <Route path="/forms/create" element={<FormCreatePage />} />
           <Route path="/forms/:formId" element={<FormPage />} />
           <Route
-            path="/forms/:formId/responses"
-            element={<ResponseListPage />}
-          />
-          <Route
             path="/forms/:formId/responses/:responseId"
             element={<ResponseDetailPage />}
+          />
+          <Route
+            path="/responses/:responseId"
+            element={<ResponseDetailPage />}
+          />
+          <Route
+            path="/admin/:adminId/responses"
+            element={<AdminResponseListPage />}
           />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>

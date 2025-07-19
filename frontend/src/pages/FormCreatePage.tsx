@@ -2,6 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import ActionButton from '../components/ActionButton';
+import PrivacyNotice from '../components/PrivacyNotice';
 import CreateFooter from '../features/form-create/CreateFooter';
 import CreateHeader from '../features/form-create/CreateHeader';
 import FormBuilder from '../features/form-create/FormBuilder';
@@ -35,6 +36,7 @@ export default function FormCreatePage() {
         requiresPassword: false,
       },
       password: '',
+      adminPassword: '', // Required field
     },
   });
 
@@ -59,6 +61,9 @@ export default function FormCreatePage() {
   return (
     <div className="py-8 flex flex-col space-y-8 items-center">
       <CreateHeader />
+      <div className="w-full max-w-4xl px-4">
+        <PrivacyNotice context="create" />
+      </div>
       <div className="flex items-center">
         <div className="lg:col-span-2">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200">

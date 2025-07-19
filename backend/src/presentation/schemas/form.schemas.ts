@@ -47,6 +47,7 @@ export const createFormSchema = z.object({
   schema: formSchemaSchema,
   settings: formSettingsSchema,
   password: z.string().min(6).optional(),
+  adminPassword: z.string().min(6), // Required for admin access
 });
 
 export const formIdParamSchema = z.object({
@@ -63,7 +64,16 @@ export const formResponseSchema = z.object({
   description: z.string().nullable(),
   schema: formSchemaSchema,
   settings: formSettingsSchema,
+  adminId: uuidSchema,
   isActive: z.boolean(),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
+});
+
+export const adminIdParamSchema = z.object({
+  adminId: uuidSchema,
+});
+
+export const adminPasswordVerificationSchema = z.object({
+  adminPassword: z.string().min(1),
 });

@@ -27,11 +27,15 @@ export class FormService {
       password = await Password.fromPlainText(dto.password);
     }
 
+    // Admin password is always required
+    const adminPassword = await Password.fromPlainText(dto.adminPassword);
+
     const form = Form.create(
       dto.title,
       dto.description,
       schema,
       dto.settings,
+      adminPassword,
       password,
     );
 
@@ -113,6 +117,32 @@ export class FormService {
     return this.toResponseDto(form);
   }
 
+  async getFormByAdminId(adminId: string): Promise<Form> {
+    const form = await this.formRepository.findByAdminId(adminId);
+
+    if (!form) {
+      throw new NotFoundError('Form', adminId);
+    }
+
+    if (!form.isActive) {
+      throw new NotFoundError('Form', adminId);
+    }
+
+    return form;
+  }
+
+  async verifyAdminPassword(adminId: string, password: string): Promise<Form> {
+    const form = await this.getFormByAdminId(adminId);
+
+    // Admin password is always required
+    const isValidPassword = await form.verifyAdminPassword(password);
+    if (!isValidPassword) {
+      throw new UnauthorizedError('Invalid admin password');
+    }
+
+    return form;
+  }
+
   async deactivateForm(id: string): Promise<void> {
     const formId = new FormId(id);
     const form = await this.formRepository.findById(formId);
@@ -145,6 +175,7 @@ export class FormService {
       description: json.description,
       schema: json.schema,
       settings: json.settings,
+      adminId: json.adminId,
       isActive: json.isActive,
       createdAt: json.createdAt,
       updatedAt: json.updatedAt,

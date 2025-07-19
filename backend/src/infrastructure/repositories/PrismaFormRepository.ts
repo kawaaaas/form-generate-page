@@ -15,6 +15,8 @@ export class PrismaFormRepository implements FormRepository {
       schema: JSON.stringify(form.schema.value),
       settings: JSON.stringify(form.settings),
       password: form.getPasswordHash() || null,
+      adminId: form.adminId,
+      adminPassword: form.getAdminPasswordHash(), // Always required
       isActive: form.isActive,
       createdAt: form.createdAt,
       updatedAt: form.updatedAt,
@@ -33,6 +35,8 @@ export class PrismaFormRepository implements FormRepository {
         schema: true,
         settings: true,
         password: false,
+        adminId: true,
+        adminPassword: false,
         isActive: true,
         createdAt: true,
         updatedAt: true,
@@ -43,7 +47,7 @@ export class PrismaFormRepository implements FormRepository {
       return null;
     }
 
-    return this.toDomainEntity(formData, false);
+    return this.toDomainEntity(formData, false, false);
   }
 
   async findByIdWithPassword(id: FormId): Promise<Form | null> {
@@ -55,7 +59,7 @@ export class PrismaFormRepository implements FormRepository {
       return null;
     }
 
-    return this.toDomainEntity(formData, true);
+    return this.toDomainEntity(formData, true, true);
   }
 
   async update(form: Form): Promise<void> {
@@ -77,6 +81,18 @@ export class PrismaFormRepository implements FormRepository {
     });
   }
 
+  async findByAdminId(adminId: string): Promise<Form | null> {
+    const formData = await prisma.form.findUnique({
+      where: { adminId },
+    });
+
+    if (!formData) {
+      return null;
+    }
+
+    return this.toDomainEntity(formData, true, true);
+  }
+
   async findAll(options?: {
     isActive?: boolean;
     limit?: number;
@@ -96,6 +112,8 @@ export class PrismaFormRepository implements FormRepository {
         schema: true,
         settings: true,
         password: false,
+        adminId: true,
+        adminPassword: false,
         isActive: true,
         createdAt: true,
         updatedAt: true,
@@ -105,7 +123,7 @@ export class PrismaFormRepository implements FormRepository {
       skip: options?.offset,
     });
 
-    return forms.map((form) => this.toDomainEntity(form, false));
+    return forms.map((form) => this.toDomainEntity(form, false, false));
   }
 
   async count(options?: { isActive?: boolean }): Promise<number> {
@@ -117,8 +135,12 @@ export class PrismaFormRepository implements FormRepository {
     return await prisma.form.count({ where });
   }
 
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-  private toDomainEntity(data: any, includePassword: boolean): Form {
+  private toDomainEntity(
+    // biome-ignore lint/suspicious/noExplicitAny: Prisma database response type
+    data: any,
+    includePassword: boolean,
+    _includeAdminPassword: boolean, // Admin password is always included
+  ): Form {
     const schema = new FormSchema(JSON.parse(data.schema));
     const settings: FormSettings = JSON.parse(data.settings);
 
@@ -127,6 +149,9 @@ export class PrismaFormRepository implements FormRepository {
       password = Password.fromHash(data.password);
     }
 
+    // Admin password is always required and included
+    const adminPassword = Password.fromHash(data.adminPassword);
+
     return new Form({
       id: new FormId(data.id),
       title: data.title,
@@ -134,6 +159,8 @@ export class PrismaFormRepository implements FormRepository {
       schema,
       settings,
       password,
+      adminId: data.adminId,
+      adminPassword,
       isActive: data.isActive,
       createdAt: data.createdAt,
       updatedAt: data.updatedAt,

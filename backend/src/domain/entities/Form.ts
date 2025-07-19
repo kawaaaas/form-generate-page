@@ -11,6 +11,8 @@ export interface FormProps {
   schema: FormSchema;
   settings: FormSettings;
   password?: Password;
+  adminId: string;
+  adminPassword: Password; // Required for admin access
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -23,6 +25,8 @@ export class Form {
   private readonly _schema: FormSchema;
   private _settings: FormSettings;
   private readonly _password?: Password;
+  private readonly _adminId: string;
+  private readonly _adminPassword: Password; // Required for admin access
   private _isActive: boolean;
   private readonly _createdAt: Date;
   private _updatedAt: Date;
@@ -36,6 +40,8 @@ export class Form {
     this._schema = props.schema;
     this._settings = props.settings;
     this._password = props.password;
+    this._adminId = props.adminId;
+    this._adminPassword = props.adminPassword;
     this._isActive = props.isActive;
     this._createdAt = props.createdAt;
     this._updatedAt = props.updatedAt;
@@ -46,9 +52,11 @@ export class Form {
     description: string | undefined,
     schema: FormSchema,
     settings: FormSettings,
+    adminPassword: Password, // Required for admin access
     password?: Password,
   ): Form {
     const now = new Date();
+    const adminId = crypto.randomUUID();
 
     return new Form({
       id: FormId.generate(),
@@ -56,6 +64,8 @@ export class Form {
       description,
       schema,
       settings,
+      adminId,
+      adminPassword,
       password,
       isActive: true,
       createdAt: now,
@@ -87,6 +97,14 @@ export class Form {
     return this._password !== undefined;
   }
 
+  get adminId(): string {
+    return this._adminId;
+  }
+
+  get hasAdminPassword(): boolean {
+    return true; // Always true since adminPassword is required
+  }
+
   get isActive(): boolean {
     return this._isActive;
   }
@@ -105,6 +123,10 @@ export class Form {
     }
 
     return await this._password.verify(plainPassword);
+  }
+
+  async verifyAdminPassword(plainPassword: string): Promise<boolean> {
+    return await this._adminPassword.verify(plainPassword);
   }
 
   updateTitle(title: string): void {
@@ -145,8 +167,16 @@ export class Form {
     return this._settings.requiresPassword && this._password !== undefined;
   }
 
+  requiresAdminPasswordForAccess(): boolean {
+    return true; // Always true since adminPassword is required
+  }
+
   getPasswordHash(): string | undefined {
     return this._password?.hashedValue;
+  }
+
+  getAdminPasswordHash(): string {
+    return this._adminPassword.hashedValue;
   }
 
   // biome-ignore lint/suspicious/noExplicitAny: <explanation>
@@ -157,6 +187,7 @@ export class Form {
       description: this._description,
       schema: this._schema.value,
       settings: this._settings,
+      adminId: this._adminId,
       isActive: this._isActive,
       createdAt: this._createdAt.toISOString(),
       updatedAt: this._updatedAt.toISOString(),
