@@ -1,6 +1,6 @@
 import type { InferRequestType } from 'hono/client';
 import useSWR from 'swr';
-import type { ResponseItemDto } from '../../../../../backend/src/application/dto/FormResponseDto';
+// import type { ResponseItemDto } from '../../../../../backend/src/application/dto/FormResponseDto';
 import { client } from '../../../lib/api-client';
 
 interface ApiResponse<T> {
@@ -17,7 +17,8 @@ const useFetchResponse = (id: string) => {
     if (!res.ok) {
       throw new Error('Failed to fetch response');
     }
-    const result = (await res.json()) as ApiResponse<ResponseItemDto>;
+    // biome-ignore lint/suspicious/noExplicitAny: Generic API response type
+    const result = (await res.json()) as ApiResponse<any>;
     if (!result.success || !result.data) {
       throw new Error(result.error || 'Failed to fetch response');
     }

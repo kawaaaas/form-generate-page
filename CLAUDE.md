@@ -144,28 +144,32 @@ npx prisma studio --schema=backend/prisma/schema.prisma
 
 ### Routing Structure
 ```
-/                          # Home (start form creation)
-/forms/create              # Form creation page  
-/forms/:formId             # Response page (password protection supported)
-/forms/:formId/responses   # Response list page
-/forms/:formId/responses/:responseId  # Individual response detail page
+/                                    # Home (start form creation)
+/forms/create                        # Form creation page  
+/forms/:formId                       # Response page (password protection supported)
+/forms/:formId/responses             # Response list page (deprecated - use admin URLs)
+/forms/:formId/responses/:responseId # Individual response detail page (deprecated)
+/responses/:responseId               # Individual response page (standalone access)
+/admin/:adminId/responses            # Secure admin response list page
 ```
 
 ### Database Schema
 
 ```prisma
 model Form {
-  id          String   @id @default(uuid())
-  title       String
-  description String?
-  schema      Json     // Form structure
-  settings    Json     // Form settings
-  password    String?  // Hashed password
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id              String   @id @default(uuid())
+  title           String
+  description     String?
+  schema          String   // Form structure (JSON as string)
+  settings        String   // Form settings (JSON as string)
+  password        String?  // Hashed password for form access
+  adminId         String   @unique @default(uuid()) // Admin access UUID
+  adminPassword   String?  // Hashed password for admin access (responses management)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
   
-  responses   Response[]
+  responses       Response[]
   
   @@index([createdAt])
 }
@@ -173,8 +177,8 @@ model Form {
 model Response {
   id          String   @id @default(uuid())
   formId      String
-  data        Json     // Response data
-  metadata    Json?    // Metadata (optional)
+  data        String   // Response data (JSON as string)
+  metadata    String?  // Metadata (JSON as string, optional)
   createdAt   DateTime @default(now())
   
   form        Form     @relation(fields: [formId], references: [id], onDelete: Cascade)
@@ -187,14 +191,19 @@ model Response {
 
 ```typescript
 // Form operations
-POST   /api/forms/create      // Create form
-GET    /api/forms/:id         // Get form
-POST   /api/forms/:id/verify  // Password verification (returns form data if password matches)
+POST   /api/forms/create              // Create form (returns formId and adminId)
+GET    /api/forms/:id                 // Get form for response
+POST   /api/forms/:id/verify          // Password verification for form access
+
+// Admin operations
+GET    /api/admin/:adminId            // Get form by adminId
+POST   /api/admin/:adminId/verify     // Admin password verification
 
 // Response operations  
-POST   /api/responses/create        // Submit response
-GET    /api/responses/form/:formId  // Get all responses for form
-GET    /api/responses/:id           // Get individual response
+POST   /api/responses/create          // Submit response (returns responseId)
+GET    /api/responses/:id             // Get individual response
+GET    /api/responses/form/:formId    // Get all responses for form (deprecated)
+GET    /api/responses/admin/:adminId  // Get all responses via adminId
 ```
 
 ### Security Requirements
@@ -207,6 +216,164 @@ GET    /api/responses/:id           // Get individual response
 - Error handling with user-friendly error messages
 - Loading state displays
 
+### Security Features
+
+#### Admin Access Control
+- **Dual UUID System**: Form ID and Admin ID are completely separate
+- **Admin Password Protection**: Optional secondary password for response management
+- **URL Isolation**: Admin URLs use different routing patterns (`/admin/:adminId/responses`)
+- **Access Separation**: Response viewing and form answering use different authentication
+
+#### Privacy Protection Features
+- **Privacy Notices**: Prominent warnings on both creation and response pages
+- **Data Limitation**: Clear guidance against collecting personal information
+- **User Education**: Explicit examples of appropriate vs inappropriate use cases
+
+### Component Architecture
+
+#### Generic Components (`/src/components/`)
+- `Layout.tsx` - Main application layout
+- `LoadingSpinner.tsx` - Loading state indicator
+- `ErrorDisplay.tsx` - Error message display
+- `SuccessCard.tsx` - Success message container
+- `PageContainer.tsx` - Page wrapper with consistent styling
+- `EmptyState.tsx` - Empty state placeholder
+- `CopyButton.tsx` - Clipboard functionality with fallback
+- `PrivacyNotice.tsx` - Privacy warning component
+- `Modal.tsx` - Generic modal wrapper
+- `SubmitButton.tsx` - Form submission button
+
+#### Feature-Specific Components (`/src/features/`)
+
+**Form Creation (`/form-create/`)**
+- `CreateHeader.tsx` - Form creation page header
+- `CreateFooter.tsx` - Form creation page footer
+- `FormBuilder.tsx` - Main form building interface
+- `FormPreview.tsx` - Real-time form preview
+- `FormSettings.tsx` - Form configuration settings
+
+**Form Response (`/form/`)**
+- `FormContainer.tsx` - Response form wrapper
+- `FormHeader.tsx` - Form title and description
+- `FormElement.tsx` - Individual form field renderer
+- `FormFooter.tsx` - Form submission area
+- `PasswordModal.tsx` - Form access password input
+- `ResponseSubmittedSuccess.tsx` - Post-submission success screen
+- `FormCreatedSuccess.tsx` - Post-creation success screen
+
+**Response Management (`/response/`)**
+- `ResponseList.tsx` - List of form responses
+- `ResponseCard.tsx` - Individual response preview
+- `ResponseDetailHeader.tsx` - Response detail page header
+- `ResponseContent.tsx` - Response data display
+- `ResponseMetadata.tsx` - Response metadata (date, etc.)
+- `ResponseActions.tsx` - Response management actions
+
+**Admin Management (`/admin/`)**
+- `AdminPasswordModal.tsx` - Admin authentication modal
+
+### Utility Functions
+
+#### Clipboard Support (`/utils/clipboard.ts`)
+- Modern Clipboard API with fallback for older browsers
+- Cross-browser compatibility
+- Error handling and user feedback
+
+#### Date Utilities (`/utils/dateUtils.ts`)
+- Consistent date formatting across the application
+- Locale-aware date display
+
+### Development Guidelines
+
+#### Code Quality
+- **Biome**: Unified linting and formatting tool
+- **TypeScript**: Strict type checking enabled
+- **Component Props**: All props are properly typed with interfaces
+- **Error Boundaries**: Proper error handling and user feedback
+
+#### Responsive Design
+- **Mobile-First**: Design starts with mobile and scales up
+- **Tailwind Classes**: Only default spacing values, no custom px values
+- **Breakpoints**: Custom breakpoints defined for consistent scaling
+- **Touch-Friendly**: Interactive elements sized for touch interfaces
+
+#### Performance Considerations
+- **Code Splitting**: Components are modularly organized for potential lazy loading
+- **Bundle Size**: Dependencies are carefully chosen to minimize bundle size
+- **Database Indexing**: Strategic indexes on frequently queried fields
+
+### Deployment Considerations
+
+#### Production Setup
+- Environment variables for database connection
+- CORS configuration for production domains
+- Static file serving configuration
+- Database migration strategy
+
+#### Monitoring and Logging
+- Error tracking integration points
+- Performance monitoring hooks
+- User analytics considerations (privacy-compliant)
+
 ### Future Extensibility Considerations
 - Repository pattern for data access layer abstraction
 - JSON format data storage considering future NoSQL migration
+- Modular component architecture for feature additions
+- API versioning strategy for backward compatibility
+- Internationalization (i18n) preparation
+- Theme system implementation possibility
+- Advanced form validation engine
+- Export functionality for response data
+- Real-time collaboration features
+- Advanced analytics and reporting
+
+## Folder Structure
+
+```
+form-generate-page/
+├── backend/                    # Backend application
+│   ├── src/
+│   │   ├── application/        # Application layer (services, DTOs)
+│   │   ├── domain/            # Domain layer (entities, value objects)
+│   │   ├── infrastructure/    # Infrastructure layer (repositories, database)
+│   │   ├── presentation/      # Presentation layer (controllers, schemas)
+│   │   └── shared/           # Shared utilities and types
+│   ├── prisma/               # Database schema and migrations
+│   └── package.json
+├── frontend/                  # Frontend application
+│   ├── src/
+│   │   ├── components/       # Generic reusable components
+│   │   ├── features/         # Feature-specific components
+│   │   ├── pages/           # Page components
+│   │   ├── hooks/           # Custom React hooks
+│   │   ├── utils/           # Utility functions
+│   │   ├── types/           # TypeScript type definitions
+│   │   ├── data/            # Mock data for development
+│   │   └── lib/             # Third-party library configurations
+│   ├── public/              # Static assets
+│   └── package.json
+├── package.json             # Root package.json for workspace management
+├── tsconfig.json           # Shared TypeScript configuration
+├── biome.json             # Linting and formatting configuration
+├── README.md              # User documentation
+└── CLAUDE.md             # Technical documentation (this file)
+```
+
+## Mock Data Strategy
+
+During development, the application uses comprehensive mock data to simulate real API responses:
+
+- **mockForms.ts**: Sample form structures with various field types
+- **mockResponses.ts**: Sample response data for testing
+- **API Integration Points**: All API calls are abstracted for easy switching to real endpoints
+
+## Important Development Notes
+
+1. **Privacy-First Design**: All features are built with privacy protection as a core principle
+2. **No Authentication System**: Deliberate choice for simplicity, security through obscurity via UUIDs
+3. **Stateless Design**: No user sessions, each access is independent
+4. **Component Reusability**: High emphasis on creating reusable, composable components
+5. **Type Safety**: Comprehensive TypeScript coverage for reliability
+6. **Error Handling**: Graceful degradation and user-friendly error messages
+7. **Accessibility**: Basic accessibility features implemented, room for enhancement
+8. **Performance**: Optimized for fast loading and responsive interactions

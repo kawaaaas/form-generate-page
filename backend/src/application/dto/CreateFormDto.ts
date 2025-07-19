@@ -6,4 +6,5 @@ export interface CreateFormDto {
   schema: FormSchema;
   settings: FormSettings;
   password?: string;
+  adminPassword: string; // Required for admin access
 }

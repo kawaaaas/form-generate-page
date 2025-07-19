@@ -6,6 +6,7 @@ export interface FormResponseDto {
   description?: string;
   schema: FormSchema;
   settings: FormSettings;
+  adminId: string;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
