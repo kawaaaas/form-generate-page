@@ -1,21 +1,31 @@
 import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
-// import { HomePage } from './pages/HomePage'
-// import { FormCreatePage } from './pages/FormCreatePage'
-// import { NotFoundPage } from './pages/NotFoundPage'
+import Layout from './components/Layout';
+import FormCreatePage from './pages/FormCreatePage';
+import FormPage from './pages/FormPage';
+import HomePage from './pages/HomePage';
+import NotFoundPage from './pages/NotFoundPage';
+import ResponseDetailPage from './pages/ResponseDetailPage';
+import ResponseListPage from './pages/ResponseListPage';
 
 function App() {
   return (
     <Router>
-      <Routes>
-        {/* <Route path="/" element={<HomePage />} />
-        <Route path="/forms/create" element={<FormCreatePage />} />
-        <Route path="*" element={<NotFoundPage />} /> */}
-        <Route path="/" element={<div>home</div>} />
-        <Route path="/forms/create" element={<div>form/create</div>} />
-        <Route path="/forms/response/:id" element={<div>form/response</div>} />
-        <Route path="/forms/answer/:id" element={<div>form/answer</div>} />
-        <Route path="*" element={<div>not found</div>} />
-      </Routes>
+      <Layout>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/forms/create" element={<FormCreatePage />} />
+          <Route path="/forms/:formId" element={<FormPage />} />
+          <Route
+            path="/forms/:formId/responses"
+            element={<ResponseListPage />}
+          />
+          <Route
+            path="/forms/:formId/responses/:responseId"
+            element={<ResponseDetailPage />}
+          />
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </Layout>
     </Router>
   );
 }

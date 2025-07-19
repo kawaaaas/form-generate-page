@@ -1,7 +1,14 @@
-import type { ResponseItemDto } from '@backend/application/dto/SubmitResponseDto';
 import type { InferRequestType } from 'hono/client';
 import useSWR from 'swr';
+import type { ResponseItemDto } from '../../../../../backend/src/application/dto/FormResponseDto';
 import { client } from '../../../lib/api-client';
+
+interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  message?: string;
+  error?: string;
+}
 
 const useFetchResponse = (id: string) => {
   const $get = client.api.responses[':id'].$get;
@@ -10,7 +17,11 @@ const useFetchResponse = (id: string) => {
     if (!res.ok) {
       throw new Error('Failed to fetch response');
     }
-    return (await res.json()) as ResponseItemDto;
+    const result = (await res.json()) as ApiResponse<ResponseItemDto>;
+    if (!result.success || !result.data) {
+      throw new Error(result.error || 'Failed to fetch response');
+    }
+    return result.data;
   };
 
   const { data, error, isLoading, mutate } = useSWR(
