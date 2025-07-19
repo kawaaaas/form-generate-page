@@ -84,9 +84,13 @@ npx prisma studio --schema=backend/prisma/schema.prisma
 
 ### Frontend Architecture
 - **Build**: Vite with TypeScript compilation check before bundling
-- **Styling**: Tailwind CSS with PostCSS
+- **Styling**: Tailwind CSS with PostCSS (use only default Tailwind spacing values, no custom px values)
+- **Responsive Design**: Mobile-first approach with custom breakpoints (xs: 475px, sm: 640px, md: 768px, lg: 1024px, xl: 1280px, 2xl: 1536px) and safe area support for iOS devices
 - **Communication**: Direct fetch calls to backend at localhost:3000
 - **Health Check**: Built-in connectivity verification with backend
+- **Component Organization**: 
+  - Generic reusable components in `src/components/`
+  - Page-specific components in `src/features/[pageName]/`
 
 ### Development Workflow
 1. Both servers run on different ports (frontend: 5173, backend: 3000)
